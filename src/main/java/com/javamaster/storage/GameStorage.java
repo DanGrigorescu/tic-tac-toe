@@ -1,5 +1,5 @@
-package storage;
-import model.Game;
+package com.javamaster.storage;
+import com.javamaster.model.Game;
 
 import java.util.HashMap;
 import java.util.Map;
