@@ -1,13 +1,14 @@
 package com.javamaster.exception;
 
-public class InvalidParamException extends Exception{
+public class InvalidParamException extends Exception {
 
     private String message;
 
-    public InvalidParamException(String message){
+    public InvalidParamException(String message) {
         this.message = message;
     }
-    public String getMessage(){
+
+    public String getMessage() {
         return message;
     }
 }

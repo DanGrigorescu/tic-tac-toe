@@ -1,65 +1,83 @@
 package com.javamaster.service;
+
 import com.javamaster.exception.InvalidGameException;
 import com.javamaster.exception.InvalidParamException;
 import com.javamaster.exception.NotFoundException;
-import com.javamaster.model.*;
+import com.javamaster.model.Game;
+import com.javamaster.model.GamePlay;
+import com.javamaster.model.Player;
+import com.javamaster.model.TicToe;
 import com.javamaster.storage.GameStorage;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 import static com.javamaster.model.GameStatus.*;
 
+@Service
+@AllArgsConstructor
 public class GameService {
+
     public Game createGame(Player player) {
         Game game = new Game();
         game.setBoard(new int[3][3]);
         game.setGameId(UUID.randomUUID().toString());
         game.setPlayer1(player);
-        game.setStatus(GameStatus.NEW);
-        GameStorage.getInstace().setGame(game);
+        game.setStatus(NEW);
+        GameStorage.getInstance().setGame(game);
         return game;
     }
 
     public Game connectToGame(Player player2, String gameId) throws InvalidParamException, InvalidGameException {
-        if (!GameStorage.getInstace().getGames().containsKey(gameId)) {
+        if (!GameStorage.getInstance().getGames().containsKey(gameId)) {
             throw new InvalidParamException("Nu exista joc cu acest id!");
         }
-        Game game = GameStorage.getInstace().getGames().get(gameId);
+        Game game = GameStorage.getInstance().getGames().get(gameId);
 
         if (game.getPlayer2() != null) {
             throw new InvalidGameException("Jocul nu mai este valabil!");
-
         }
+
         game.setPlayer2(player2);
         game.setStatus(IN_PROGRESS);
-        GameStorage.getInstace().setGame(game);
+        GameStorage.getInstance().setGame(game);
         return game;
     }
 
     public Game connectToRandomGame(Player player2) throws NotFoundException {
-        Game game = GameStorage.getInstace().getGames().values().stream().filter(it -> it.getStatus()
-                .equals(NEW)).findFirst().orElseThrow(() -> new NotFoundException("Jocul nu a fost gasit!"));
+        Game game = GameStorage.getInstance().getGames().values().stream()
+                .filter(it -> it.getStatus().equals(NEW))
+                .findFirst().orElseThrow(() -> new NotFoundException("Jocul nu a fost gasit!"));
         game.setPlayer2(player2);
         game.setStatus(IN_PROGRESS);
-        GameStorage.getInstace().setGame(game);
+        GameStorage.getInstance().setGame(game);
         return game;
     }
 
     public Game gamePlay(GamePlay gamePlay) throws NotFoundException, InvalidGameException {
-        if (!GameStorage.getInstace().getGames().containsKey(gamePlay.getGameId())) {
+        if (!GameStorage.getInstance().getGames().containsKey(gamePlay.getGameId())) {
             throw new NotFoundException("Jocul nu a fost gasit!");
         }
-        Game game = GameStorage.getInstace().getGames().get(gamePlay.getGameId());
+
+        Game game = GameStorage.getInstance().getGames().get(gamePlay.getGameId());
         if (game.getStatus().equals(FINISHED)) {
             throw new InvalidGameException("Jocul este deja terminat!");
         }
+
         int[][] board = game.getBoard();
         board[gamePlay.getCoordinateX()][gamePlay.getCoordinateY()] = gamePlay.getType().getValue();
 
-        checkWinner(game.getBoard(), TicToe.X);
-        checkWinner(game.getBoard(), TicToe.O);
+        Boolean xWinner = checkWinner(game.getBoard(), TicToe.X);
+        Boolean oWinner = checkWinner(game.getBoard(), TicToe.O);
 
-        GameStorage.getInstace().setGame(game);
+        if (xWinner) {
+            game.setWinner(TicToe.X);
+        } else if (oWinner) {
+            game.setWinner(TicToe.O);
+        }
+
+        GameStorage.getInstance().setGame(game);
         return game;
     }
 
@@ -72,22 +90,19 @@ public class GameService {
                 counterIndex++;
             }
         }
-        int[][] winCombinations = {{0, 1, 2}, {3, 4, 5,}, {6, 7, 8},
-                {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
-                {0, 4, 8}, {2, 4, 6}};
+
+        int[][] winCombinations = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}};
         for (int i = 0; i < winCombinations.length; i++) {
             int counter = 0;
-            for (int j = 0; j < winCombinations.length; j++) {
+            for (int j = 0; j < winCombinations[i].length; j++) {
                 if (boardArray[winCombinations[i][j]] == ticToe.getValue()) {
                     counter++;
-                    if(counter == 3){
+                    if (counter == 3) {
                         return true;
                     }
-
                 }
             }
         }
         return false;
     }
 }
-

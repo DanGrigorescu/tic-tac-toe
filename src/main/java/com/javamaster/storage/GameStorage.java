@@ -1,32 +1,31 @@
 package com.javamaster.storage;
+
 import com.javamaster.model.Game;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class GameStorage {
+
     private static Map<String, Game> games;
-    private static GameStorage instace;
+    private static GameStorage instance;
 
-    private GameStorage(){
-        games= new HashMap<>();
-
+    private GameStorage() {
+        games = new HashMap<>();
     }
-    public static synchronized GameStorage getInstace(){
-        if(instace==null){
-            instace = new GameStorage();
+
+    public static synchronized GameStorage getInstance() {
+        if (instance == null) {
+            instance = new GameStorage();
         }
-        return instace;
-
+        return instance;
     }
-    public Map<String, Game> getGames(){
+
+    public Map<String, Game> getGames() {
         return games;
     }
 
     public void setGame(Game game) {
         games.put(game.getGameId(), game);
     }
-
-
-
 }
